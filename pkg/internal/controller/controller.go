@@ -237,13 +237,10 @@ func (c *Controller) reconcileHandler(obj interface{}) bool {
 		return true
 	}
 
-	log := c.Log.WithValues("name", req.Name, "namespace", req.Namespace)
-
 	// RunInformersAndControllers the syncHandler, passing it the namespace/Name string of the
 	// resource to be synced.
 	if result, err := c.Do.Reconcile(req); err != nil {
 		c.Queue.AddRateLimited(req)
-		log.Error(err, "Reconciler error")
 		ctrlmetrics.ReconcileErrors.WithLabelValues(c.Name).Inc()
 		ctrlmetrics.ReconcileTotal.WithLabelValues(c.Name, "error").Inc()
 		return false
@@ -265,9 +262,6 @@ func (c *Controller) reconcileHandler(obj interface{}) bool {
 	// Finally, if no error occurs we Forget this item so it does not
 	// get queued again until another change happens.
 	c.Queue.Forget(obj)
-
-	// TODO(directxman12): What does 1 mean?  Do we want level constants?  Do we want levels at all?
-	log.V(1).Info("Successfully Reconciled")
 
 	ctrlmetrics.ReconcileTotal.WithLabelValues(c.Name, "success").Inc()
 	// Return true, don't take a break
